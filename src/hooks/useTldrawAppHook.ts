@@ -1,5 +1,6 @@
 import * as React from 'react'
 import TldrawPlugin from 'src/main'
+import { DEFAULT_ZOOM_SPEED } from 'src/obsidian/TldrawSettingsTab'
 import { TldrawPluginMetaData } from 'src/utils/document'
 import { Editor, TldrawFile } from 'tldraw'
 import useUserPluginSettings from './useUserPluginSettings'
@@ -75,9 +76,7 @@ export function useTldrawAppEffects({
 			editor.options.laserDelayMs = laserDelayMs
 		}
 
-		if (settings.cameraOptions) {
-			editor.setCameraOptions(settings.cameraOptions)
-		}
+		editor.setCameraOptions({ zoomSpeed: DEFAULT_ZOOM_SPEED, ...settings.cameraOptions })
 
 		editor.user.updateUserPreferences({
 			isPasteAtCursorMode: settings.clipboard?.pasteAtCursor,

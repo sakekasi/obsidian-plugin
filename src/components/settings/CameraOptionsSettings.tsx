@@ -2,7 +2,8 @@ import React, { useCallback, useMemo } from 'react'
 import useSettingsManager from 'src/hooks/useSettingsManager'
 import useUserPluginSettings from 'src/hooks/useUserPluginSettings'
 import { Setting } from '@obsidian-plugin-toolkit/react/components/setting/group'
-import { Dropdown } from '@obsidian-plugin-toolkit/react/components'
+import { Dropdown, ExtraButton, Text } from '@obsidian-plugin-toolkit/react/components'
+import { DEFAULT_ZOOM_SPEED } from 'src/obsidian/TldrawSettingsTab'
 
 export default function CameraOptionsSettings() {
 	const settingsManager = useSettingsManager()
@@ -28,6 +29,19 @@ export default function CameraOptionsSettings() {
 		[settingsManager]
 	)
 
+	const onZoomSpeedChange = useCallback(
+		async (value: string) => {
+			const parsedValue = parseFloat(value)
+			if (Number.isNaN(parsedValue) || parsedValue <= 0) return
+			await settingsManager.updateEditorZoomSpeed(parsedValue)
+		},
+		[settingsManager]
+	)
+
+	const resetZoomSpeed = useCallback(async () => {
+		await settingsManager.updateEditorZoomSpeed(undefined)
+	}, [settingsManager])
+
 	return (
 		<>
 			<Setting
@@ -39,7 +53,17 @@ export default function CameraOptionsSettings() {
 			<Setting
 				slots={{
 					name: <>Zoom speed</>,
-					desc: 'Note: This setting is not yet implemented.',
+					desc: 'How quickly the camera zooms. Higher values zoom faster.',
+					control: (
+						<>
+							<Text
+								value={`${settings.cameraOptions?.zoomSpeed ?? ''}`}
+								placeholder={`${DEFAULT_ZOOM_SPEED}`}
+								onChange={onZoomSpeedChange}
+							/>
+							<ExtraButton icon={'reset'} tooltip={'reset'} onClick={resetZoomSpeed} />
+						</>
+					),
 				}}
 			/>
 			<Setting

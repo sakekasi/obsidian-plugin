@@ -171,6 +171,19 @@ export default class UserSettingsManager {
 		this.updateSettings(this.#plugin.settings)
 	}
 
+	async updateEditorZoomSpeed(zoomSpeed: UserTLCameraOptions['zoomSpeed']) {
+		let options = this.#plugin.settings.cameraOptions
+		if (zoomSpeed === options?.zoomSpeed) return
+		if (zoomSpeed === undefined) {
+			delete options?.zoomSpeed
+		} else {
+			if (!options) options = {}
+			options.zoomSpeed = zoomSpeed
+		}
+		this.#plugin.settings.cameraOptions = Object.assign({}, options)
+		this.updateSettings(this.#plugin.settings)
+	}
+
 	async updatePasteAtCursor(
 		pasteAtCursor: NonNullable<TldrawPluginSettings['clipboard']>['pasteAtCursor']
 	) {

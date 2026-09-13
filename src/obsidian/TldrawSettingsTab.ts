@@ -74,6 +74,11 @@ type DeprecatedFileDestinationSettings = {
 type RemoveReadonly<T> = { -readonly [P in keyof T]: T[P] }
 
 /**
+ * Faster than tldraw's default of 1 so zooming feels more responsive.
+ */
+export const DEFAULT_ZOOM_SPEED = 1.75
+
+/**
  * Camera options that users can choose
  */
 export type UserTLCameraOptions = Pick<
