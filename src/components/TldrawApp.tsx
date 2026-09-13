@@ -58,6 +58,7 @@ import {
 	ZoomToFitMenuItem,
 	ZoomToSelectionMenuItem,
 } from 'tldraw'
+import PaperBackground from './PaperBackground'
 import PluginKeyboardShortcutsDialog from './PluginKeyboardShortcutsDialog'
 import PluginQuickActions from './PluginQuickActions'
 
@@ -165,6 +166,7 @@ function PluginViewSubmenu() {
 }
 
 const components: TLComponents = {
+	Background: PaperBackground,
 	MainMenu: () => (
 		<DefaultMainMenu>
 			<LocalFileMenu />

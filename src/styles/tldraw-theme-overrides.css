@@ -15,6 +15,22 @@
 	--tl-color-background: var(--background-primary);
 }
 
+/* Cream canvas background in light mode, matching MD paper */
+.tl-obsidian-theme .tl-theme__light {
+	--tl-color-background: #faf7e6;
+}
+
+/*
+	Subtle paper grain: tiled greyscale fractal noise centered on 50% grey,
+	soft-lit over the cream so it lightens/darkens without shifting the color.
+	Raise/lower `slope` (and set intercept = 0.5 - 0.5 * slope) for more/less grain.
+*/
+.tl-obsidian-theme .tl-theme__light .tl-background {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='8' intercept='-3.5'/%3E%3CfeFuncG type='linear' slope='8' intercept='-3.5'/%3E%3CfeFuncB type='linear' slope='8' intercept='-3.5'/%3E%3CfeFuncA type='linear' slope='0' intercept='1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+	/* background-size and background-position follow the camera, see PaperBackground.tsx */
+	background-blend-mode: soft-light;
+}
+
 /* In dark mode, panels use the secondary background */
 .tl-obsidian-theme .tl-theme__dark {
 	--tl-color-panel: var(--background-secondary);
