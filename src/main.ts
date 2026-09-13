@@ -9,6 +9,7 @@ import {
 	OpenViewState,
 	Plugin,
 	TFile,
+	TFolder,
 	ViewState,
 	WorkspaceLeaf,
 } from 'obsidian'
@@ -251,6 +252,21 @@ export default class TldrawPlugin extends Plugin {
 		// adds a menu item to the file menu (three dots) depending on view mode
 		this.registerEvent(
 			this.app.workspace.on('file-menu', (menu, file, source, leaf) => {
+				menu.addItem((item) => {
+					item
+						.setSection('action-primary')
+						.setTitle('New tldraw drawing')
+						.setIcon(TLDRAW_ICON_NAME)
+						.onClick(async () => {
+							const foldername = file instanceof TFolder ? file.path : (file.parent?.path ?? '/')
+							const newFile = await this.createTldrFile(this.createDefaultFilename({}), {
+								foldername,
+								inMarkdown: true,
+							})
+							await this.openTldrFile(newFile, 'current-tab', VIEW_TYPE_TLDRAW)
+						})
+				})
+
 				if (!(file instanceof TFile)) return
 
 				if (file.path.endsWith(TLDRAW_FILE_EXTENSION)) {
