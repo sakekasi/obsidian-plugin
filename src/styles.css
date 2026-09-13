@@ -2,6 +2,7 @@
 @import url('styles/workaround-obsidian-mobile-navbar.css');
 @import url('styles/audit.css');
 @import url('styles/tldraw-theme-overrides.css');
+@import url('styles/custom-fonts.css');
 
 /* 
 	!!! Please prefix all custom classes with 'ptl' !!!

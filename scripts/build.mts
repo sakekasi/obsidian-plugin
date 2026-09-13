@@ -46,6 +46,7 @@ const context = await createEsbuildObsidianContext({
 		treeShaking: true,
 		loader: {
 			'.js': 'jsx',
+			'.woff2': 'dataurl',
 		},
 		outdir,
 		define: {

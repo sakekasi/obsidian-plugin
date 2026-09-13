@@ -1,0 +1,35 @@
+/*
+	Style panel previews for the custom fonts registered in `src/tldraw/custom-fonts.ts`.
+	Their icon is the empty `none` placeholder, which is filled with a sample of the font.
+*/
+[data-testid^='style.font.equity-'] .tlui-icon__placeholder::after,
+[data-testid^='style.font.concourse-'] .tlui-icon__placeholder::after {
+	content: 'Aa';
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	font-size: 15px;
+	line-height: 1;
+}
+
+[data-testid='style.font.equity-400'] .tlui-icon__placeholder::after {
+	font-family: 'Equity Text A 400', serif;
+}
+
+[data-testid='style.font.equity-700'] .tlui-icon__placeholder::after {
+	font-family: 'Equity Text A 700', serif;
+}
+
+[data-testid='style.font.concourse-400'] .tlui-icon__placeholder::after {
+	font-family: 'Concourse 400', sans-serif;
+}
+
+[data-testid='style.font.concourse-700'] .tlui-icon__placeholder::after {
+	font-family: 'Concourse 700', sans-serif;
+}
+
+[data-testid='style.font.concourse-800'] .tlui-icon__placeholder::after {
+	font-family: 'Concourse 800', sans-serif;
+}

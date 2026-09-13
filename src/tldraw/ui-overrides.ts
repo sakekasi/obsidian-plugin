@@ -1,5 +1,6 @@
 import { Platform } from 'obsidian'
 import TldrawPlugin from 'src/main'
+import { customFontTranslations } from 'src/tldraw/custom-fonts'
 import {
 	downloadBlob,
 	getSaveFileCopyAction,
@@ -31,6 +32,7 @@ export const CREATE_PAGE_ACTION = 'create-page'
 export function uiOverrides(plugin: TldrawPlugin): TLUiOverrides {
 	const trackEvent = useUiEvents()
 	return {
+		translations: { en: customFontTranslations },
 		actions: (editor, actions, { msg, addDialog, addToast, paste }) => {
 			const defaultDocumentName = msg('document.default-name')
 			if (!Platform.isMobile) {

@@ -36,6 +36,7 @@ import TldrawInObsidianPluginInstance from './obsidian/plugin/instance'
 import { markdownPostProcessor } from './obsidian/plugin/markdown-post-processor'
 import { processFontOverrides, processIconOverrides } from './obsidian/plugin/settings'
 import UserSettingsManager from './obsidian/settings/UserSettingsManager'
+import './tldraw/custom-fonts'
 import {
 	FILE_EXTENSION,
 	FRONTMATTER_KEY,
