@@ -1,7 +1,9 @@
 import { Editor, EditorPosition, Notice, TFile } from 'obsidian'
 import TldrawPlugin from 'src/main'
 import { TldrawDocument } from 'src/obsidian/plugin/document'
+import { FileSearchModal } from 'src/obsidian/modal/FileSearchModal'
 import { linkEditorOpen } from 'src/tldraw/links/link-edit-state'
+import { importPdfIntoEditor } from 'src/tldraw/pdf/import-pdf'
 import {
 	FILE_EXTENSION,
 	PANE_TARGETS,
@@ -187,6 +189,24 @@ export function registerCommands(plugin: TldrawPlugin) {
 			if (editor.getSelectedShapeIds().length === 0) return false
 			if (checking) return true
 			linkEditorOpen(editor).set(true)
+		},
+	})
+
+	plugin.addCommand({
+		id: 'insert-pdf-pages',
+		name: 'Insert PDF pages…',
+		checkCallback: (checking) => {
+			const editor = plugin.currTldrawEditor
+			if (!editor || editor.getIsReadonly()) return false
+			if (checking) return true
+			new FileSearchModal(plugin, {
+				extensions: ['pdf'],
+				onEmptyStateText: (searchPath) => `There are no PDFs in ${searchPath}`,
+				setSelection: (file) => {
+					if (!(file instanceof TFile)) return
+					void importPdfIntoEditor({ plugin, editor, file })
+				},
+			}).open()
 		},
 	})
 

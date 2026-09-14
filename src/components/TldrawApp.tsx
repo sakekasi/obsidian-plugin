@@ -11,6 +11,8 @@ import { ObsidianTLAssetStore } from 'src/tldraw/asset-store'
 import { TLDRAW_LICENSE_KEY } from 'src/tldraw/license'
 import { createHotkeyOverrides } from 'src/tldraw/HotkeyOverrides'
 import { createLinkLayer } from 'src/tldraw/links/LinkLayer'
+import { createPdfCropSync } from 'src/tldraw/pdf/PdfCropSync'
+import { createPdfDropHandler } from 'src/tldraw/pdf/PdfDropHandler'
 import {
 	CREATE_PAGE_ACTION,
 	PLUGIN_ACTION_TOGGLE_ZOOM_LOCK,
@@ -290,12 +292,11 @@ const TldrawApp = ({
 	})
 	const overridesUiComponents = React.useRef<TLComponents>(
 		(() => {
-			const LinkLayer = createLinkLayer({
-				plugin,
-				sourcePath: filePath ?? '',
-				proxy: getAssetProxy(store),
-			})
+			const proxy = getAssetProxy(store)
+			const LinkLayer = createLinkLayer({ plugin, sourcePath: filePath ?? '', proxy })
 			const HotkeyOverrides = createHotkeyOverrides(plugin)
+			const PdfCropSync = createPdfCropSync(plugin, proxy)
+			const PdfDropHandler = createPdfDropHandler(plugin, filePath ?? '')
 			const OtherInFront = otherComponents?.InFrontOfTheCanvas
 			// Views pass their own InFrontOfTheCanvas, so render the link layer alongside it.
 			const InFrontOfTheCanvas = () => (
@@ -303,6 +304,8 @@ const TldrawApp = ({
 					{OtherInFront && <OtherInFront />}
 					<LinkLayer />
 					<HotkeyOverrides />
+					<PdfCropSync />
+					<PdfDropHandler />
 				</>
 			)
 			return { ...components, ...otherComponents, InFrontOfTheCanvas }

@@ -130,6 +130,21 @@ export function rebuildTldrawMarkdown(data: string, codeblock: string, keep: (id
 	})
 }
 
+/**
+ * Remove link blocks by id, matching on the text itself rather than cached offsets, which
+ * go stale whenever the file is rewritten.
+ */
+export function removeLinkBlocks(data: string, ids: string[]): { text: string; removed: LinkBlock[] } {
+	const targets = new Set(ids)
+	const removed: LinkBlock[] = []
+	const text = data.replace(LINK_BLOCK_PATTERN, (match, link: string, id: string) => {
+		if (!targets.has(id)) return match
+		removed.push({ link, id })
+		return ''
+	})
+	return { text: text.replace(/\n{3,}/g, '\n\n'), removed }
+}
+
 /** Insert a link block under the Links heading, or after the frontmatter for older files. */
 export function insertLinkBlock(data: string, block: LinkBlock) {
 	const text = linkBlockText(block)

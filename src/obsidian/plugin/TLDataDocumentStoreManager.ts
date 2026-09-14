@@ -280,15 +280,13 @@ export default class TLDataDocumentStoreManager {
 
 				const assetStoreProxy = new ObsidianMarkdownFileTLAssetStoreProxy(this.plugin, tFile, {
 					contents: {
-						addedAsset: (fileContents, _, assetFile) => {
-							new Notice(`Added asset: ${assetFile.path}`)
+						addedAsset: (fileContents) => {
 							this.propagateData(workspace, storeGroup, fileContents)
 						},
 					},
 					blockRef: {
 						removed: (block, contents, newData) => {
 							this.propagateData(workspace, storeGroup, newData)
-							new Notice(`Removed ${contents} from ${tFile.path}`)
 							triggers.blockRef.asset.deleted.trigger(block.id)
 						},
 						resolveAsset: {

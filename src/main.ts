@@ -63,6 +63,7 @@ import { useStatusBarState } from './utils/stores'
 import { createRawTldrawFile } from './utils/tldraw-file'
 import { tldrawFileToJson } from './utils/tldraw-file/tldraw-file-to-json'
 import { checkAndCreateFolder, getNewUniqueFilepath, isValidViewType } from './utils/utils'
+import { disposePdfServices } from './obsidian/pdf/pdf-services'
 
 export default class TldrawPlugin extends Plugin {
 	#instance?: TldrawInObsidianPluginInstance
@@ -112,6 +113,9 @@ export default class TldrawPlugin extends Plugin {
 
 		// Lets the Page preview core plugin show previews when hovering links on shapes.
 		this.registerHoverLinkSource(VIEW_TYPE_TLDRAW, { display: 'tldraw', defaultMod: false })
+
+		// Close open PDF documents and the rendered-page cache when the plugin unloads.
+		this.register(disposePdfServices)
 
 		// settings:
 		await this.settingsManager.loadSettings()

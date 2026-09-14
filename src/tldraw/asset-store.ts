@@ -1,8 +1,9 @@
 import { BlockCache, CachedMetadata, parseLinktext, ReferenceCache, TFile } from 'obsidian'
 import TldrawPlugin from 'src/main'
 import { vaultFileToBlob } from 'src/obsidian/helpers/vault'
+import { getRenderedPdfPage, pageFromSubpath } from 'src/obsidian/pdf/pdf-services'
 import { TldrawFileListener } from 'src/obsidian/plugin/TldrawFileListenerMap'
-import { deleteRangesFromText } from 'src/utils/text'
+import { LinkBlock, removeLinkBlocks } from 'src/utils/markdown-layout'
 import { createAttachmentFilepath } from 'src/utils/utils'
 import {
 	DEFAULT_SUPPORTED_IMAGE_TYPES,
@@ -14,7 +15,7 @@ import {
 } from 'tldraw'
 import { insertLinkBlock } from 'src/utils/markdown-layout'
 import { createImageAsset } from './helpers/create-asset'
-import { markBlockRefPending } from './pending-block-refs'
+import { isBlockRefPending, markBlockRefPending } from './pending-block-refs'
 import { TldrawStoreIndexedDB } from './indexeddb-store'
 
 const blockRefAssetPrefix = 'obsidian.blockref.'
@@ -152,44 +153,28 @@ export class ObsidianMarkdownFileTLAssetStoreProxy {
 
 	async removeBlockRef(...blockRefAssetIds: BlockRefAssetId[]) {
 		if (blockRefAssetIds.length === 0) return
-		let deleteds: { block: BlockCache; deleted: string }[] = []
-		const newData = await this.plugin.app.vault.process(this.tFile, (data) => {
-			const ranges = blockRefAssetIds
-				.map((e) => {
-					const blockId = e.slice(blockRefAssetPrefix.length)
-					const block = this.cachedMetadata.blocks?.[blockId]
-					if (block === undefined) {
-						return
-					}
-					return {
-						block,
-						get start() {
-							return block.position.start.offset
-						},
-						get end() {
-							return block.position.end.offset
-						},
-					}
-				})
-				// Just ignore block refs that don't exist
-				.filter((range) => range !== undefined)
+		const ids = blockRefAssetIds.map((id) => ObsidianMarkdownFileTLAssetStoreProxy.getBlockIdFromBlockRefId(id))
 
-			const { newText, deleteds: _deleteds } = deleteRangesFromText(data, ranges)
-			// verify that the deleteds are correct
-			for (const { range, deleted } of _deleteds) {
-				if (!deleted.endsWith(`^${range.block.id}`) && deleted.length === range.end - range.start) {
-					throw new Error('Unable to remove asset block ref', {
-						cause: `Block does not end with ^${range.block.id}`,
-					})
-				}
-			}
-			deleteds = _deleteds.map(({ range: { block }, deleted }) => ({ block, deleted }))
-			return newText
+		// Match link lines by their text: cached block offsets are stale after the file is
+		// rewritten on save, and deleting by offset could cut into the drawing data.
+		let removed: LinkBlock[] = []
+		const newData = await this.plugin.app.vault.process(this.tFile, (data) => {
+			const result = removeLinkBlocks(data, ids)
+			removed = result.removed
+			return result.text
 		})
 
-		for (const { block, deleted } of deleteds) {
-			this.events?.blockRef?.removed(block, deleted, newData)
+		for (const { id, link } of removed) {
+			const block = this.#cachedMetadata?.blocks?.[id] ?? ({ id } as BlockCache)
+			this.events?.blockRef?.removed(block, `${link}\n^${id}`, newData)
 		}
+	}
+
+	/** Make an asset's data available before Obsidian has indexed its new link line. */
+	primeCache(blockRefAssetId: BlockRefAssetId, blob: Blob) {
+		const existing = this.#resolvedAssetDataCache.get(blockRefAssetId)
+		if (existing) URL.revokeObjectURL(existing)
+		this.cacheAsset(blockRefAssetId, blob)
 	}
 
 	private cacheAsset(assetSrc: BlockRefAssetId, blob: Blob) {
@@ -206,7 +191,8 @@ export class ObsidianMarkdownFileTLAssetStoreProxy {
 		const id = ObsidianMarkdownFileTLAssetStoreProxy.getBlockIdFromBlockRefId(blockRefId)
 		const block = this.cachedMetadata.blocks?.[id]
 		if (!block) {
-			this.events?.blockRef?.resolveAsset.notFound(id)
+			// A just-added line may not be indexed yet; that's not an error worth reporting.
+			if (!isBlockRefPending(id)) this.events?.blockRef?.resolveAsset.notFound(id)
 			return null
 		}
 
@@ -265,9 +251,17 @@ export class ObsidianMarkdownFileTLAssetStoreProxy {
 		const resolved = this.resolveBlockRef(blockRefAssetId)
 		if (!resolved) return null
 
-		const { block: assetBlock, reference: blockRef, file: assetFile } = resolved
+		const { block: assetBlock, reference: blockRef, file: assetFile, subpath } = resolved
 
-		return vaultFileToBlob(assetFile)
+		// PDF links render the linked page instead of loading the file itself.
+		const blob =
+			assetFile.extension === 'pdf'
+				? getRenderedPdfPage(this.plugin.app, assetFile, pageFromSubpath(subpath)).then(
+						(page) => page.blob
+					)
+				: vaultFileToBlob(assetFile)
+
+		return blob
 			.then((blob) => {
 				this.events?.blockRef?.resolveAsset.loaded(assetBlock)
 				return blob
