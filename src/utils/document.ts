@@ -1,10 +1,11 @@
 import { PluginManifest } from 'obsidian'
 import { isValidFrontmatterTag } from 'src/obsidian/helpers/front-matter'
 import { JsonObject, SerializedStore, TldrawFile, TLRecord, TLStore } from 'tldraw'
+import { isBlockRefPending } from 'src/tldraw/pending-block-refs'
 import { TLDATA_DELIMITER_END, TLDATA_DELIMITER_START } from './constants'
+import { collectBlockRefIds, layoutTldrawMarkdown, rebuildTldrawMarkdown } from './markdown-layout'
 import { createRawTldrawFile } from './tldraw-file'
 import { tldrawFileToJson } from './tldraw-file/tldraw-file-to-json'
-import { hasKewords, replaceBetweenKeywords } from './utils'
 
 export type TldrawPluginMetaData = {
 	'plugin-version': string
@@ -104,13 +105,8 @@ export const codeBlockTemplate = (data: TLData) => {
 	return str
 }
 
-export const tlFileTemplate = (frontmatter: string, codeblock: string) => {
-	let str = ''
-	str += frontmatter
-	str += '\n\n'
-	str += codeblock
-	return str
-}
+export const tlFileTemplate = (frontmatter: string, codeblock: string) =>
+	layoutTldrawMarkdown({ frontmatter, blocks: [], codeblock })
 
 /**
  *
@@ -130,17 +126,14 @@ export async function updateFileData(
 		documentStore.meta.uuid
 	)
 
-	if (!hasKewords(data, TLDATA_DELIMITER_START, TLDATA_DELIMITER_END)) {
-		return `${data}\n${codeBlockTemplate(tldrawData)}`
-	}
-
-	// If you do not use `null, "\t"` as arguments for stringify(),
-	// Obsidian will lag when you try to open the file in markdown view.
-	// It may have to do with if you don't format the string,
-	// it'll be a really long line and that lags the markdown view.
-	const stringifiedData = JSON.stringify(tldrawData, null, '\t')
-
-	return replaceBetweenKeywords(data, TLDATA_DELIMITER_START, TLDATA_DELIMITER_END, stringifiedData)
+	// Rewrites the file into the sectioned layout on every save, which also migrates older
+	// files and prunes link lines that no shape or asset references anymore.
+	const usedBlockRefIds = collectBlockRefIds(documentStore.store.allRecords())
+	return rebuildTldrawMarkdown(
+		data,
+		codeBlockTemplate(tldrawData),
+		(id) => usedBlockRefIds.has(id) || isBlockRefPending(id)
+	)
 }
 
 export function makeFileDataTldr(documentStore: TLDataDocumentStore) {

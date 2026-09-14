@@ -1,6 +1,7 @@
 import { Platform } from 'obsidian'
 import TldrawPlugin from 'src/main'
 import { customFontTranslations } from 'src/tldraw/custom-fonts'
+import { linkEditorOpen } from 'src/tldraw/links/link-edit-state'
 import {
 	downloadBlob,
 	getSaveFileCopyAction,
@@ -57,6 +58,17 @@ export function uiOverrides(plugin: TldrawPlugin): TLUiOverrides {
 			)
 
 			actions['paste'] = pasteFromClipboardOverride(editor, { msg, paste, addToast })
+
+			// Replace tldraw's URL-only link dialog with the vault-aware link popover.
+			actions['edit-link'] = {
+				...actions['edit-link'],
+				kbd: '$k',
+				onSelect() {
+					if (editor.getIsReadonly()) return
+					if (editor.getSelectedShapeIds().length === 0) return
+					linkEditorOpen(editor).set(true)
+				},
+			}
 
 			/**
 			 * https://tldraw.dev/examples/editor-api/lock-camera-zoom

@@ -1,5 +1,14 @@
 /* Link editing popover. Uses tldraw's UI tokens when rendered inside the editor, Obsidian's otherwise. */
 
+/* Positions the popover centered under the selection inside the canvas. */
+.ptl-link-popover-anchor {
+	position: absolute;
+	top: 0;
+	left: -170px;
+	z-index: 10;
+	pointer-events: auto;
+}
+
 .ptl-link-popover {
 	--ptl-popover-bg: var(--color-panel, var(--background-primary));
 	--ptl-popover-text: var(--color-text-1, var(--text-normal));

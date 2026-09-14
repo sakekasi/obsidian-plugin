@@ -1,4 +1,4 @@
-import { BlockCache, CachedMetadata, ReferenceCache, TFile } from 'obsidian'
+import { BlockCache, CachedMetadata, parseLinktext, ReferenceCache, TFile } from 'obsidian'
 import TldrawPlugin from 'src/main'
 import { vaultFileToBlob } from 'src/obsidian/helpers/vault'
 import { TldrawFileListener } from 'src/obsidian/plugin/TldrawFileListenerMap'
@@ -12,7 +12,9 @@ import {
 	TLAssetStore,
 	TLImageAsset,
 } from 'tldraw'
+import { insertLinkBlock } from 'src/utils/markdown-layout'
 import { createImageAsset } from './helpers/create-asset'
+import { markBlockRefPending } from './pending-block-refs'
 import { TldrawStoreIndexedDB } from './indexeddb-store'
 
 const blockRefAssetPrefix = 'obsidian.blockref.'
@@ -124,27 +126,23 @@ export class ObsidianMarkdownFileTLAssetStoreProxy {
 	 * Persist the asset file as a link within the markdown file and attach a block reference to it.
 	 * @param assetFile The file in the vault to link as an asset
 	 * @param blockRefId The reference id for the asset.
+	 * @param subpath Optional subpath including the leading `#`, e.g. `#page=3` or `#^block`.
 	 * @returns
 	 */
-	async createLinkWithBlockRef(assetFile: TFile, blockRefId: string) {
+	async createLinkWithBlockRef(assetFile: TFile, blockRefId: string, subpath?: string) {
 		if (this.cachedMetadata.blocks?.[blockRefId] !== undefined) {
 			throw new Error('Block ref already exists')
 		}
 		const internalLink = this.plugin.app.fileManager.generateMarkdownLink(
 			assetFile,
-			this.tFile.path
+			this.tFile.path,
+			subpath
 		)
-		const linkBlock = `${internalLink}\n^${blockRefId}`
 		const assetSrc = `${blockRefAssetPrefix}${blockRefId}` as const
+		// Protect the line from being pruned by a save before its shape or asset exists.
+		markBlockRefPending(blockRefId)
 		await this.plugin.app.vault.process(this.tFile, (data) => {
-			const { start, end } = this.cachedMetadata.frontmatterPosition ?? {
-				start: { offset: 0 },
-				end: { offset: 0 },
-			}
-
-			const frontmatter = data.slice(start.offset, end.offset)
-			const rest = data.slice(end.offset)
-			const contents = `${frontmatter}\n${linkBlock}\n${rest}`
+			const contents = insertLinkBlock(data, { link: internalLink, id: blockRefId })
 			this.events?.contents?.addedAsset(contents, assetSrc, assetFile)
 			return contents
 		})
@@ -200,38 +198,74 @@ export class ObsidianMarkdownFileTLAssetStoreProxy {
 		return assetDataUri
 	}
 
-	async getAsset(blockRefAssetId: BlockRefAssetId): Promise<Blob | null> {
-		const blocks = this.cachedMetadata.blocks || {}
-		const id = blockRefAssetId.slice(blockRefAssetPrefix.length)
-		const assetBlock = blocks[id]
-		if (!assetBlock) {
+	/**
+	 * Find the link or embed that a block ref points at, and the vault file it resolves to.
+	 * `subpath` includes the leading `#` (e.g. `#page=3`), or is '' when absent.
+	 */
+	resolveBlockRef(blockRefId: BlockRefAssetId) {
+		const id = ObsidianMarkdownFileTLAssetStoreProxy.getBlockIdFromBlockRefId(blockRefId)
+		const block = this.cachedMetadata.blocks?.[id]
+		if (!block) {
 			this.events?.blockRef?.resolveAsset.notFound(id)
 			return null
 		}
 
 		// Can either be a link or an embed since they both have a link property
-		const blockRef: ReferenceCache | undefined =
+		const reference: ReferenceCache | undefined =
 			this.cachedMetadata.links?.find(
-				(linkCache) => linkCache.position.start.offset === assetBlock.position.start.offset
+				(linkCache) => linkCache.position.start.offset === block.position.start.offset
 			) ??
 			this.cachedMetadata.embeds?.find(
-				(embed) => embed.position.start.offset === assetBlock.position.start.offset
+				(embed) => embed.position.start.offset === block.position.start.offset
 			)
 
-		if (!blockRef) {
-			this.events?.blockRef?.resolveAsset.notALink(assetBlock)
+		if (!reference) {
+			this.events?.blockRef?.resolveAsset.notALink(block)
 			return null
 		}
 
-		const assetFile = this.plugin.app.metadataCache.getFirstLinkpathDest(
-			blockRef.link,
-			this.tFile.path
-		)
+		const { path, subpath } = parseLinktext(reference.link)
+		const file = this.plugin.app.metadataCache.getFirstLinkpathDest(path, this.tFile.path)
 
-		if (!assetFile) {
-			this.events?.blockRef?.resolveAsset.linkToUnknownFile(assetBlock, blockRef.link)
+		if (!file) {
+			this.events?.blockRef?.resolveAsset.linkToUnknownFile(block, reference.link)
 			return null
 		}
+
+		return { block, reference, file, subpath }
+	}
+
+	/**
+	 * Store a link to a vault file (with optional subpath) as a block ref line, so Obsidian
+	 * keeps it up to date when the target is renamed.
+	 */
+	async addLink(file: TFile, subpath?: string): Promise<BlockRefAssetId> {
+		return this.createLinkWithBlockRef(file, window.crypto.randomUUID(), subpath)
+	}
+
+	/** Point an existing block ref line at a new target, keeping its block id. */
+	async updateLink(blockRefId: BlockRefAssetId, file: TFile, subpath?: string) {
+		const resolved = this.resolveBlockRef(blockRefId)
+		if (!resolved) throw new Error(`Unknown block ref ${blockRefId}`)
+
+		const { reference } = resolved
+		const newLink = this.plugin.app.fileManager.generateMarkdownLink(file, this.tFile.path, subpath)
+
+		await this.plugin.app.vault.process(this.tFile, (data) => {
+			const { start, end } = reference.position
+			const current = data.slice(start.offset, end.offset)
+			if (current !== reference.original) {
+				throw new Error('Unable to update link: the file changed since it was indexed')
+			}
+			return `${data.slice(0, start.offset)}${newLink}${data.slice(end.offset)}`
+		})
+	}
+
+	async getAsset(blockRefAssetId: BlockRefAssetId): Promise<Blob | null> {
+		const resolved = this.resolveBlockRef(blockRefAssetId)
+		if (!resolved) return null
+
+		const { block: assetBlock, reference: blockRef, file: assetFile } = resolved
 
 		return vaultFileToBlob(assetFile)
 			.then((blob) => {

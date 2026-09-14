@@ -110,6 +110,9 @@ export default class TldrawPlugin extends Plugin {
 
 		this.registerView(VIEW_TYPE_TLDRAW_OFFLINE, (leaf) => new TldrawOfflineFileView(leaf))
 
+		// Lets the Page preview core plugin show previews when hovering links on shapes.
+		this.registerHoverLinkSource(VIEW_TYPE_TLDRAW, { display: 'tldraw', defaultMod: false })
+
 		// settings:
 		await this.settingsManager.loadSettings()
 		this.addSettingTab(new TldrawSettingsTab(this.app, this))

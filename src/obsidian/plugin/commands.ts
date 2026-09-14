@@ -1,6 +1,7 @@
 import { Editor, EditorPosition, Notice, TFile } from 'obsidian'
 import TldrawPlugin from 'src/main'
 import { TldrawDocument } from 'src/obsidian/plugin/document'
+import { linkEditorOpen } from 'src/tldraw/links/link-edit-state'
 import {
 	FILE_EXTENSION,
 	PANE_TARGETS,
@@ -172,6 +173,20 @@ export function registerCommands(plugin: TldrawPlugin) {
 			const tFile = await importTldrawFile(plugin, file)
 			if (!tFile) return
 			editorInsert(new TldrawDocument(plugin, tFile), editor, from, to)
+		},
+	})
+
+	// Cmd+K is handled by tldraw's own shortcut (see HotkeyOverrides); this command
+	// lets the action be run from the command palette or bound to another hotkey.
+	plugin.addCommand({
+		id: 'edit-shape-link',
+		name: 'Edit link on selected shapes',
+		checkCallback: (checking) => {
+			const editor = plugin.currTldrawEditor
+			if (!editor || editor.getIsReadonly()) return false
+			if (editor.getSelectedShapeIds().length === 0) return false
+			if (checking) return true
+			linkEditorOpen(editor).set(true)
 		},
 	})
 

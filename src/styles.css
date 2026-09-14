@@ -3,6 +3,9 @@
 @import url('styles/audit.css');
 @import url('styles/tldraw-theme-overrides.css');
 @import url('styles/custom-fonts.css');
+@import url('styles/link-markers.css');
+@import url('styles/link-popover.css');
+@import url('styles/pdf-import-modal.css');
 
 /* 
 	!!! Please prefix all custom classes with 'ptl' !!!

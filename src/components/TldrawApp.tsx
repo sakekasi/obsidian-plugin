@@ -7,7 +7,10 @@ import { TldrawInObsidianPluginProvider } from 'src/contexts/plugin'
 import { useClickAwayListener } from 'src/hooks/useClickAwayListener'
 import { useTldrawAppEffects } from 'src/hooks/useTldrawAppHook'
 import TldrawPlugin from 'src/main'
+import { ObsidianTLAssetStore } from 'src/tldraw/asset-store'
 import { TLDRAW_LICENSE_KEY } from 'src/tldraw/license'
+import { createHotkeyOverrides } from 'src/tldraw/HotkeyOverrides'
+import { createLinkLayer } from 'src/tldraw/links/LinkLayer'
 import {
 	CREATE_PAGE_ACTION,
 	PLUGIN_ACTION_TOGGLE_ZOOM_LOCK,
@@ -23,6 +26,8 @@ import {
 import { getIsDarkMode } from 'src/utils/utils'
 import { getViewport, saveViewport } from 'src/utils/viewport-storage'
 import {
+	DefaultContextMenu,
+	DefaultContextMenuContent,
 	DefaultMainMenu,
 	DefaultPageMenu,
 	DefaultZoomMenu,
@@ -165,8 +170,32 @@ function PluginViewSubmenu() {
 	)
 }
 
+function PluginEditLinkMenuItem() {
+	const editor = useEditor()
+	const shouldDisplay = useValue(
+		'can edit link',
+		() => editor.getSelectedShapeIds().length > 0 && !editor.getIsReadonly(),
+		[editor]
+	)
+	if (!shouldDisplay) return null
+	return <TldrawUiMenuActionItem actionId="edit-link" />
+}
+
+function getAssetProxy(store?: TldrawAppStoreProps) {
+	const assets = store?.plugin?.store.props.assets
+	return assets instanceof ObsidianTLAssetStore ? assets.proxy : undefined
+}
+
 const components: TLComponents = {
 	Background: PaperBackground,
+	ContextMenu: (props) => (
+		<DefaultContextMenu {...props}>
+			<TldrawUiMenuGroup id="ptl-link">
+				<PluginEditLinkMenuItem />
+			</TldrawUiMenuGroup>
+			<DefaultContextMenuContent />
+		</DefaultContextMenu>
+	),
 	MainMenu: () => (
 		<DefaultMainMenu>
 			<LocalFileMenu />
@@ -259,10 +288,26 @@ const TldrawApp = ({
 		...uiOverrides(plugin),
 		...otherUiOverrides,
 	})
-	const overridesUiComponents = React.useRef({
-		...components,
-		...otherComponents,
-	})
+	const overridesUiComponents = React.useRef<TLComponents>(
+		(() => {
+			const LinkLayer = createLinkLayer({
+				plugin,
+				sourcePath: filePath ?? '',
+				proxy: getAssetProxy(store),
+			})
+			const HotkeyOverrides = createHotkeyOverrides(plugin)
+			const OtherInFront = otherComponents?.InFrontOfTheCanvas
+			// Views pass their own InFrontOfTheCanvas, so render the link layer alongside it.
+			const InFrontOfTheCanvas = () => (
+				<>
+					{OtherInFront && <OtherInFront />}
+					<LinkLayer />
+					<HotkeyOverrides />
+				</>
+			)
+			return { ...components, ...otherComponents, InFrontOfTheCanvas }
+		})()
+	)
 
 	const storeProps = React.useMemo(() => (!store ? undefined : getEditorStoreProps(store)), [store])
 
