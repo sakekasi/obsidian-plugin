@@ -36,6 +36,14 @@
 	--tl-color-panel: var(--background-secondary);
 }
 
+/*
+	Obsidian (and the gallery's stand-in) gives every <button> a drop shadow. tldraw's buttons
+	sit inside panels that already have one, so strip it to avoid a bumpy look.
+*/
+.tl-container .tlui-button {
+	box-shadow: none;
+}
+
 /* Menu zone always matches primary bg */
 .tlui-menu-zone {
 	background-color: var(--tl-color-background);

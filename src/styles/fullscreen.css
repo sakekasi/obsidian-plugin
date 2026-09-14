@@ -1,0 +1,37 @@
+/* Fullscreen: see src/obsidian/fullscreen.ts. Hide everything off the path from <body> to the view. */
+
+body.ptl-fullscreen .ptl-fullscreen-keep:not(.ptl-fullscreen-target) > :not(.ptl-fullscreen-keep) {
+	display: none !important;
+}
+
+/* Mobile adds top padding to the root split for its header. */
+body.ptl-fullscreen.is-mobile .workspace > .mod-root {
+	padding-top: 0 !important;
+}
+
+/*
+	On macOS with Obsidian's frameless window, the window controls ("stoplights") float over the
+	top-left corner. Normally the tab header sits under them; fullscreen hides it, so push tldraw's
+	top row (outline panel, style panel, exit button) below them. Native OS fullscreen has no
+	stoplights, so skip it there.
+*/
+body.ptl-fullscreen.mod-macos.is-hidden-frameless:not(.is-fullscreen)
+	.ptl-fullscreen-target
+	.tlui-layout__top {
+	padding-top: var(--ptl-fullscreen-stoplight-offset, 42px);
+}
+
+.ptl-fullscreen-exit {
+	pointer-events: all;
+	margin-top: 8px;
+}
+
+.tldraw-view-root .ptl-fullscreen-exit.tlui-button {
+	gap: 6px;
+	padding: 0 12px;
+	height: 32px;
+	border-radius: 999px;
+	background: var(--tl-color-panel);
+	box-shadow: var(--tl-shadow-2);
+	font-size: 12px;
+}

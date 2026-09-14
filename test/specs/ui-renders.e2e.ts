@@ -31,7 +31,8 @@ describe('Plugin UI', () => {
 	it('renders the plugin main menu', async () => {
 		// A real click rather than a synthetic one: the menu opens on pointer events, which an
 		// in-page element.click() doesn't produce.
-		await $('.tlui-menu-zone button').click()
+		// The outline panel replaces tldraw's menu zone and hosts the main menu trigger.
+		await $('.ptl-outline__menu button').click()
 
 		const menu = $('.tlui-menu')
 		await menu.waitForExist({ timeout: 5000 })

@@ -1,0 +1,380 @@
+/* Figma-style outline (layers) panel. Lives in tldraw's MenuPanel slot (top-left). */
+
+.ptl-outline {
+	--ptl-outline-row-height: 28px;
+	--ptl-outline-radius: 12px;
+	--ptl-outline-selected: color-mix(in srgb, var(--tl-color-selected) 14%, transparent);
+	--ptl-outline-child-selected: color-mix(in srgb, var(--tl-color-selected) 6%, transparent);
+	--ptl-outline-hover: color-mix(in srgb, var(--tl-color-text) 6%, transparent);
+
+	pointer-events: all;
+	color: var(--tl-color-text-1);
+	background: var(--tl-color-panel);
+	box-shadow: var(--tl-shadow-2);
+	border-radius: var(--ptl-outline-radius);
+	font-size: 13px;
+	line-height: 1.2;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.ptl-outline-icon {
+	display: block;
+	flex: none;
+}
+
+/* ---------- collapsed pill ---------- */
+
+.ptl-outline--pill {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	margin: 8px;
+	padding: 4px 4px 4px 2px;
+	max-width: 320px;
+}
+
+.ptl-outline__title {
+	flex: 1 1 auto;
+	min-width: 0;
+	padding: 0 8px 0 4px;
+	font-weight: 600;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.ptl-outline__menu {
+	display: contents;
+}
+
+/* The main menu trigger shouldn't render its own panel chrome inside our pill/header. */
+.ptl-outline__menu .tlui-main-menu,
+.ptl-outline__menu .tlui-menu-zone {
+	background: none;
+	box-shadow: none;
+}
+
+/* ---------- expanded panel ---------- */
+
+.ptl-outline--expanded {
+	position: absolute;
+	z-index: 1;
+	top: 8px;
+	left: 8px;
+	bottom: 8px;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	animation: ptl-outline-in 160ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+/*
+	Anchor the open panel to tldraw's top layout row. That row ends where the bottom row (toolbar,
+	zoom/navigation panel, and Obsidian's status-bar padding) begins, so the panel never covers them.
+*/
+.tlui-layout__top__left:has(.ptl-outline--expanded) {
+	position: relative;
+}
+
+/* tldraw's helper buttons ("Back to content") share the zone; push them past the open panel. */
+.tlui-layout__top__left:has(.ptl-outline--expanded) .tlui-helper-buttons {
+	margin-left: calc(var(--ptl-outline-width, 260px) + 16px);
+}
+
+@keyframes ptl-outline-in {
+	from {
+		opacity: 0;
+		transform: translateX(-8px) scale(0.98);
+	}
+}
+
+.ptl-outline-header {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	padding: 6px 6px 6px 2px;
+	border-bottom: 1px solid var(--tl-color-divider);
+}
+
+.ptl-outline-resize {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	width: 6px;
+	cursor: ew-resize;
+}
+
+.ptl-outline-resize:hover {
+	background: linear-gradient(to left, var(--tl-color-selected) 2px, transparent 2px);
+	opacity: 0.5;
+}
+
+/* ---------- sections ---------- */
+
+.ptl-outline-section {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+
+.ptl-outline-pages {
+	flex: none;
+	border-bottom: 1px solid var(--tl-color-divider);
+}
+
+.ptl-outline-pages .ptl-outline-list {
+	max-height: 140px;
+}
+
+.ptl-outline-layers {
+	flex: 1 1 auto;
+}
+
+.ptl-outline-section__header {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	height: 40px;
+	flex: none;
+	padding: 0 6px 0 14px;
+}
+
+.ptl-outline-section__title {
+	flex: 1;
+	font-weight: 600;
+	color: var(--tl-color-text-0);
+}
+
+/* `.ptl-outline` prefixes out-rank Obsidian's element styles (e.g. input[type], button:not(...)). */
+.ptl-outline .ptl-outline-search {
+	flex: 1;
+	min-width: 0;
+	height: 26px;
+	margin-left: -6px;
+	padding: 0 8px;
+	border: none;
+	border-radius: 7px;
+	background: var(--tl-color-muted-2);
+	color: var(--tl-color-text-0);
+	font: inherit;
+	outline: none;
+}
+
+.ptl-outline .ptl-outline-search:focus {
+	box-shadow: 0 0 0 2px var(--tl-color-selected);
+}
+
+.ptl-outline-list {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: 0 6px 8px;
+	outline: none;
+}
+
+.ptl-outline-empty {
+	padding: 12px 10px;
+	color: var(--tl-color-text-3);
+	pointer-events: none;
+}
+
+/* ---------- rows ---------- */
+
+.ptl-outline-row {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	height: var(--ptl-outline-row-height);
+	padding-right: 4px;
+	border-radius: 7px;
+	cursor: default;
+}
+
+.ptl-outline-row:hover,
+.ptl-outline-row.is-hovered {
+	background: var(--ptl-outline-hover);
+}
+
+.ptl-outline-row.is-ancestor-selected {
+	background: var(--ptl-outline-child-selected);
+}
+
+.ptl-outline-row.is-selected,
+.ptl-outline-row.is-current {
+	background: var(--ptl-outline-selected);
+}
+
+/* A run of selected rows (plus selected containers' children) reads as one rounded block. */
+.ptl-outline-row.is-selected,
+.ptl-outline-row.is-ancestor-selected {
+	border-radius: 0;
+}
+
+.ptl-outline-row.is-run-start {
+	border-top-left-radius: 7px;
+	border-top-right-radius: 7px;
+}
+
+.ptl-outline-row.is-run-end {
+	border-bottom-left-radius: 7px;
+	border-bottom-right-radius: 7px;
+}
+
+.ptl-outline-row--page {
+	padding-left: 8px;
+}
+
+.ptl-outline-row--page.is-current {
+	font-weight: 600;
+}
+
+.ptl-outline-row__chevron {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 16px;
+	height: 16px;
+	color: var(--tl-color-text-3);
+	transition: transform 140ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.ptl-outline-row__chevron.is-open {
+	transform: rotate(90deg);
+}
+
+.ptl-outline-row__type {
+	flex: none;
+	color: var(--tl-color-text-3);
+}
+
+.ptl-outline-row.is-selected .ptl-outline-row__type {
+	color: var(--tl-color-selected);
+}
+
+.ptl-outline-row__label {
+	flex: 1;
+	min-width: 0;
+	padding-left: 4px;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.ptl-outline-row.is-hidden .ptl-outline-row__label,
+.ptl-outline-row.is-hidden .ptl-outline-row__type {
+	opacity: 0.4;
+}
+
+.ptl-outline .ptl-outline-rename {
+	flex: 1;
+	min-width: 0;
+	height: 22px;
+	padding: 0 4px;
+	border: none;
+	border-radius: 5px;
+	background: var(--tl-color-panel);
+	box-shadow: 0 0 0 2px var(--tl-color-selected);
+	color: var(--tl-color-text-0);
+	font: inherit;
+	outline: none;
+	user-select: text;
+	-webkit-user-select: text;
+}
+
+/* Lock/eye appear on hover, and stay visible when active. */
+.ptl-outline-row__actions {
+	display: flex;
+	flex: none;
+}
+
+.ptl-outline-row__actions .ptl-outline-icon-button:not(.is-active) {
+	opacity: 0;
+}
+
+.ptl-outline-row:hover .ptl-outline-row__actions .ptl-outline-icon-button {
+	opacity: 1;
+}
+
+/* ---------- drop indicators ---------- */
+
+/* Insertion between rows: o------ */
+.ptl-outline-drop-line {
+	position: absolute;
+	z-index: 1;
+	right: 4px;
+	height: 2px;
+	border-radius: 1px;
+	background: var(--tl-color-selected);
+	pointer-events: none;
+}
+
+.ptl-outline-drop-line.is-before {
+	top: -1px;
+}
+
+.ptl-outline-drop-line.is-after {
+	bottom: -1px;
+}
+
+.ptl-outline-drop-line::before {
+	content: '';
+	position: absolute;
+	left: -6px;
+	top: -3px;
+	width: 4px;
+	height: 4px;
+	border: 2px solid var(--tl-color-selected);
+	border-radius: 50%;
+	background: var(--tl-color-panel);
+}
+
+/* Dropping into a frame or group: outline the row. */
+.ptl-outline-row.is-drop-inside {
+	background: color-mix(in srgb, var(--tl-color-selected) 8%, transparent);
+	box-shadow: inset 0 0 0 1.5px var(--tl-color-selected);
+}
+
+/* ---------- buttons ---------- */
+
+.ptl-outline .ptl-outline-icon-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: none;
+	border-radius: 7px;
+	background: none;
+	box-shadow: none;
+	color: var(--tl-color-text-2);
+	cursor: pointer;
+	transition:
+		background 100ms,
+		transform 120ms cubic-bezier(0.2, 0.9, 0.3, 1.4);
+}
+
+.ptl-outline .ptl-outline-row__actions .ptl-outline-icon-button {
+	width: 22px;
+	height: 22px;
+	border-radius: 5px;
+}
+
+.ptl-outline .ptl-outline-icon-button:hover {
+	background: var(--ptl-outline-hover);
+	color: var(--tl-color-text-0);
+}
+
+.ptl-outline .ptl-outline-icon-button:active {
+	transform: scale(0.9);
+}
+
+.ptl-outline .ptl-outline-icon-button.is-active {
+	color: var(--tl-color-text-0);
+}

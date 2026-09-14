@@ -12,6 +12,7 @@ import { TLDataDocumentStore } from 'src/utils/document'
 import { createDeepLinkString, parseDeepLinkString, TLDeepLink } from 'tldraw'
 import { getViewport } from 'src/utils/viewport-storage'
 import { intercept, Interceptor, MethodKeys } from '../utils/decorators/methods'
+import { exitFullscreen, isInFullscreenTarget, toggleFullscreen } from './fullscreen'
 import TldrawAssetsModal from './modal/TldrawAssetsModal'
 
 export interface DataUpdate {
@@ -90,6 +91,9 @@ export abstract class BaseTldrawFileView<View extends FileView = FileView> {
 		this.fileView.addAction(MARKDOWN_ICON_NAME, 'View as markdown', () =>
 			this.viewAsMarkdownClicked()
 		)
+		this.fileView.addAction('maximize', 'Toggle fullscreen', () =>
+			toggleFullscreen(this.fileView.contentEl)
+		)
 		this.messagesEl = this.fileView.addAction('message-square', 'View messages', (evt) =>
 			this.onMessagesClick?.(evt)
 		)
@@ -106,6 +110,8 @@ export abstract class BaseTldrawFileView<View extends FileView = FileView> {
 	// })
 	onunload(): void {
 		this.#unregisterOnWindowMigrated?.()
+		// Closing the drawing while fullscreen would otherwise leave Obsidian's chrome hidden.
+		if (isInFullscreenTarget(this.fileView.contentEl)) exitFullscreen(this.fileView.contentEl.ownerDocument)
 		this.fileView.contentEl.removeClass('tldraw-view-content')
 		this.unmountReactRoot()
 	}

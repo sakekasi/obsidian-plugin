@@ -74,6 +74,18 @@ The code block contains `{ meta, raw }`:
 
 The `START`/`END` phrases are how the plugin finds the data. Don't edit them.
 
+## Outline panel state
+
+The layers panel stores its state in ordinary tldraw record meta, so it travels with the file:
+
+| Where | Value |
+| --- | --- |
+| `shape.meta.name` | Name given in the panel. Absent means the panel shows the shape's text or a numbered type ("Line 3"). Frames don't use it: renaming a frame edits `shape.props.name`, its canvas title. |
+| `shape.meta.hidden` | `true` hides the shape and its descendants on the canvas. Absent or `false` means visible. |
+| `document.meta.outlinePanel` | `{ "collapsed": boolean, "width": number }`, the panel's open state and width for this file. |
+
+Locking uses tldraw's own `shape.isLocked`.
+
 ## How records point at links
 
 Records never store a vault path. They store `obsidian.blockref.<uuid>`, which names an

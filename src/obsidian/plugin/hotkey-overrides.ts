@@ -5,23 +5,51 @@ export interface ObsidianHotkey {
 	key: string
 }
 
+const MODIFIER_TOKENS: Record<string, Modifier> = {
+	cmd: 'Mod',
+	ctrl: 'Mod',
+	meta: 'Mod',
+	mod: 'Mod',
+	shift: 'Shift',
+	alt: 'Alt',
+	option: 'Alt',
+}
+
+/** Legacy tldraw kbd: `$` = Mod, `!` = Shift, `?` = Alt, e.g. `$!k`. */
+function parseLegacyCombo(combo: string): ObsidianHotkey {
+	return {
+		modifiers: [
+			...(combo.includes('$') ? (['Mod'] as const) : []),
+			...(combo.includes('!') ? (['Shift'] as const) : []),
+			...(combo.includes('?') ? (['Alt'] as const) : []),
+		],
+		key: combo.replace(/[!?$]/g, ''),
+	}
+}
+
 /**
- * Convert a tldraw kbd string (`$` = Mod, `!` = Shift, `?` = Alt, `,` separates
- * alternatives) into Obsidian hotkeys.
+ * tldraw 5 kbd: `+`-joined tokens, e.g. `cmd+shift+z`. It lists `cmd+…` and `ctrl+…` as separate
+ * alternatives for Mac and other platforms; both map to Obsidian's `Mod` and dedupe later.
  */
+function parseModernCombo(combo: string): ObsidianHotkey {
+	// A trailing "++" means the key itself is "+".
+	const parts = combo.endsWith('++') ? [...combo.slice(0, -2).split('+'), '+'] : combo.split('+')
+	const modifiers = parts
+		.slice(0, -1)
+		.map((token) => MODIFIER_TOKENS[token.toLowerCase()])
+		.filter((modifier): modifier is Modifier => !!modifier)
+	return { modifiers: [...new Set(modifiers)], key: parts[parts.length - 1] }
+}
+
+/** Convert a tldraw kbd string (either format, `,` separates alternatives) into Obsidian hotkeys. */
 export function kbdToHotkeys(kbd: string): ObsidianHotkey[] {
 	return kbd
 		.split(',')
 		.map((combo) => combo.trim())
 		.filter((combo) => combo !== '')
-		.map((combo) => ({
-			modifiers: [
-				...(combo.includes('$') ? (['Mod'] as const) : []),
-				...(combo.includes('!') ? (['Shift'] as const) : []),
-				...(combo.includes('?') ? (['Alt'] as const) : []),
-			],
-			key: combo.replace(/[!?$]/g, ''),
-		}))
+		.map((combo) =>
+			combo.includes('+') && !/[$!?]/.test(combo) ? parseModernCombo(combo) : parseLegacyCombo(combo)
+		)
 		.filter((hotkey) => hotkey.key !== '')
 }
 

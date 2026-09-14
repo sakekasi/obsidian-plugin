@@ -1,5 +1,6 @@
-import { Editor, EditorPosition, Notice, TFile } from 'obsidian'
+import { Editor, EditorPosition, FileView, Notice, TFile } from 'obsidian'
 import TldrawPlugin from 'src/main'
+import { exitFullscreen, isFullscreen, toggleFullscreen } from 'src/obsidian/fullscreen'
 import { TldrawDocument } from 'src/obsidian/plugin/document'
 import { FileSearchModal } from 'src/obsidian/modal/FileSearchModal'
 import { linkEditorOpen } from 'src/tldraw/links/link-edit-state'
@@ -10,6 +11,7 @@ import {
 	PaneTarget,
 	VIEW_TYPE_MARKDOWN,
 	VIEW_TYPE_TLDRAW,
+	VIEW_TYPE_TLDRAW_READ_ONLY,
 } from 'src/utils/constants'
 import { importTldrawFile } from 'src/utils/file'
 import { TLDRAW_FILE_EXTENSION } from 'tldraw'
@@ -132,6 +134,20 @@ export function registerCommands(plugin: TldrawPlugin) {
 			const oppositeViewMode =
 				currentViewMode === VIEW_TYPE_MARKDOWN ? VIEW_TYPE_TLDRAW : VIEW_TYPE_MARKDOWN
 			plugin.updateViewMode(oppositeViewMode, leaf)
+		},
+	})
+
+	plugin.addCommand({
+		id: 'toggle-fullscreen',
+		name: 'Toggle fullscreen',
+		checkCallback: (checking) => {
+			const view = plugin.app.workspace.getActiveViewOfType(FileView)
+			const isDrawing =
+				!!view && [VIEW_TYPE_TLDRAW, VIEW_TYPE_TLDRAW_READ_ONLY].includes(view.getViewType())
+			if (checking) return isDrawing || isFullscreen(activeDocument)
+			// Always offer a way out, even if focus has moved off the drawing.
+			if (!view || !isDrawing) return exitFullscreen(activeDocument)
+			toggleFullscreen(view.contentEl)
 		},
 	})
 

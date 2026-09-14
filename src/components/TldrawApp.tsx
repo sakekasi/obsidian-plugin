@@ -12,9 +12,13 @@ import { TLDRAW_LICENSE_KEY } from 'src/tldraw/license'
 import { createHotkeyOverrides } from 'src/tldraw/HotkeyOverrides'
 import { createLinkLayer } from 'src/tldraw/links/LinkLayer'
 import { createPdfCropSync } from 'src/tldraw/pdf/PdfCropSync'
+import { OutlinePanel } from 'src/tldraw/outline/OutlinePanel'
+import { getShapeVisibility } from 'src/tldraw/outline/visibility'
 import { createPdfDropHandler } from 'src/tldraw/pdf/PdfDropHandler'
+import { exitFullscreen, useIsInFullscreenTarget } from 'src/obsidian/fullscreen'
 import {
 	CREATE_PAGE_ACTION,
+	PLUGIN_ACTION_TOGGLE_FULLSCREEN,
 	PLUGIN_ACTION_TOGGLE_ZOOM_LOCK,
 	uiOverrides,
 } from 'src/tldraw/ui-overrides'
@@ -31,7 +35,6 @@ import {
 	DefaultContextMenu,
 	DefaultContextMenuContent,
 	DefaultMainMenu,
-	DefaultPageMenu,
 	DefaultZoomMenu,
 	DefaultZoomMenuContent,
 	Editor,
@@ -43,6 +46,8 @@ import {
 	Tldraw,
 	TldrawEditorStoreProps,
 	TldrawOptions,
+	TldrawUiButton,
+	TldrawUiButtonLabel,
 	TldrawUiMenuActionItem,
 	TldrawUiMenuCheckboxItem,
 	TldrawUiMenuGroup,
@@ -168,7 +173,27 @@ function PluginViewSubmenu() {
 			<TldrawUiMenuGroup id="zoom-lock">
 				<LockZoomCheckboxItem />
 			</TldrawUiMenuGroup>
+			<TldrawUiMenuGroup id="fullscreen">
+				<TldrawUiMenuActionItem actionId={PLUGIN_ACTION_TOGGLE_FULLSCREEN} />
+			</TldrawUiMenuGroup>
 		</TldrawUiMenuSubmenu>
+	)
+}
+
+/** Shown top-centre only while this drawing's view is fullscreen, since the view header is hidden. */
+function FullscreenExitPanel() {
+	const editor = useEditor()
+	const isFullscreenView = useIsInFullscreenTarget(editor.getContainer())
+	if (!isFullscreenView) return null
+	return (
+		<TldrawUiButton
+			type="normal"
+			className="ptl-fullscreen-exit"
+			title="Exit fullscreen"
+			onClick={() => exitFullscreen(editor.getContainer().ownerDocument)}
+		>
+			<TldrawUiButtonLabel>Exit fullscreen</TldrawUiButtonLabel>
+		</TldrawUiButton>
 	)
 }
 
@@ -210,6 +235,7 @@ const components: TLComponents = {
 			<PreferencesGroup />
 		</DefaultMainMenu>
 	),
+	TopPanel: FullscreenExitPanel,
 	KeyboardShortcutsDialog: PluginKeyboardShortcutsDialog,
 	QuickActions: PluginQuickActions,
 	ZoomMenu: () => (
@@ -222,14 +248,12 @@ const components: TLComponents = {
 			</TldrawUiMenuGroup>
 		</DefaultZoomMenu>
 	),
-	PageMenu: () => {
-		const editor = useEditor()
-		const hasMultiplePages = useValue('hasMultiplePages', () => editor.getPages().length > 1, [
-			editor,
-		])
-		if (!hasMultiplePages) return null
-		return <DefaultPageMenu />
-	},
+}
+
+/** Display name for the outline panel, e.g. "Attachments/figures.md" → "figures". */
+function fileTitle(filePath: string | undefined) {
+	const name = filePath?.split('/').pop()?.replace(/\.(md|tldr)$/, '')
+	return name || 'Untitled'
 }
 
 function LocalFileMenu() {
@@ -298,6 +322,9 @@ const TldrawApp = ({
 			const PdfCropSync = createPdfCropSync(plugin, proxy)
 			const PdfDropHandler = createPdfDropHandler(plugin, filePath ?? '')
 			const OtherInFront = otherComponents?.InFrontOfTheCanvas
+			const title = fileTitle(filePath)
+			// The outline panel replaces tldraw's top-left main menu + page menu.
+			const MenuPanel = () => <OutlinePanel title={title} />
 			// Views pass their own InFrontOfTheCanvas, so render the link layer alongside it.
 			const InFrontOfTheCanvas = () => (
 				<>
@@ -308,7 +335,7 @@ const TldrawApp = ({
 					<PdfDropHandler />
 				</>
 			)
-			return { ...components, ...otherComponents, InFrontOfTheCanvas }
+			return { ...components, MenuPanel, ...otherComponents, InFrontOfTheCanvas }
 		})()
 	)
 
@@ -484,6 +511,7 @@ const TldrawApp = ({
 				options={tldrawOptions}
 				user={user}
 				components={overridesUiComponents.current}
+				getShapeVisibility={getShapeVisibility}
 				// Set this flag to false when a tldraw document is embed into markdown to prevent it from gaining focus when it is loaded.
 				autoFocus={false}
 				onMount={setAppState}

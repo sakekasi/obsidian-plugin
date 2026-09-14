@@ -1,5 +1,6 @@
 import { Platform } from 'obsidian'
 import TldrawPlugin from 'src/main'
+import { getViewContentEl, toggleFullscreen } from 'src/obsidian/fullscreen'
 import { customFontTranslations } from 'src/tldraw/custom-fonts'
 import { linkEditorOpen } from 'src/tldraw/links/link-edit-state'
 import {
@@ -29,6 +30,7 @@ const DEFAULT_CAMERA_STEPS = [0.1, 0.25, 0.5, 1, 2, 4, 8]
 
 export const PLUGIN_ACTION_TOGGLE_ZOOM_LOCK = 'toggle-zoom-lock'
 export const CREATE_PAGE_ACTION = 'create-page'
+export const PLUGIN_ACTION_TOGGLE_FULLSCREEN = 'toggle-fullscreen'
 
 export function uiOverrides(plugin: TldrawPlugin): TLUiOverrides {
 	const trackEvent = useUiEvents()
@@ -105,6 +107,26 @@ export function uiOverrides(plugin: TldrawPlugin): TLUiOverrides {
 					editor.setCameraOptions({
 						zoomSteps: isCameraZoomLockedAlready ? DEFAULT_CAMERA_STEPS : [editor.getZoomLevel()],
 					})
+				},
+			}
+
+			// Cmd+P belongs to Obsidian's command palette. Dropping the kbd keeps "Print" in the menu but
+			// stops tldraw (and HotkeyOverrides, which claims every tldraw shortcut) from taking the key.
+			if (actions['print']) {
+				actions['print'] = { ...actions['print'], kbd: undefined }
+			}
+
+			actions[PLUGIN_ACTION_TOGGLE_FULLSCREEN] = {
+				id: PLUGIN_ACTION_TOGGLE_FULLSCREEN,
+				label: {
+					default: 'Toggle fullscreen',
+				},
+				readonlyOk: true,
+				onSelect() {
+					// Embeds aren't inside a view, so there's nothing to make fullscreen.
+					const contentEl = getViewContentEl(editor.getContainer())
+					if (!contentEl) return
+					toggleFullscreen(contentEl)
 				},
 			}
 
