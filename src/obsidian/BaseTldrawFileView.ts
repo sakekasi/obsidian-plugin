@@ -1,4 +1,4 @@
-import { FileView, TFile } from 'obsidian'
+import { FileView, Notice, TFile } from 'obsidian'
 import { Root } from 'react-dom/client'
 import InFrontOfTheCanvas from 'src/components/InFrontOfTheCanvas'
 import {
@@ -9,7 +9,10 @@ import {
 import TldrawPlugin from 'src/main'
 import { MARKDOWN_ICON_NAME, VIEW_TYPE_MARKDOWN } from 'src/utils/constants'
 import { TLDataDocumentStore } from 'src/utils/document'
-import { createDeepLinkString, parseDeepLinkString, TLDeepLink } from 'tldraw'
+import { focusShape, parseShapeSubpath } from 'src/tldraw/links/shape-ref'
+import { updateOutlinePanelState } from 'src/tldraw/outline/use-outline'
+import { isShapeOrAncestorHidden } from 'src/tldraw/outline/visibility'
+import { createDeepLinkString, Editor, parseDeepLinkString, TLDeepLink, TLShapeId } from 'tldraw'
 import { getViewport } from 'src/utils/viewport-storage'
 import { intercept, Interceptor, MethodKeys } from '../utils/decorators/methods'
 import { exitFullscreen, isInFullscreenTarget, toggleFullscreen } from './fullscreen'
@@ -42,6 +45,8 @@ export abstract class BaseTldrawFileView<View extends FileView = FileView> {
 
 	#storeProps?: TldrawAppStoreProps
 	#deepLink?: TLDeepLink
+	#editor?: Editor
+	#pendingShapeTarget?: TLShapeId
 
 	#unregisterViewAssetsActionCallback?: () => void
 	#unregisterOnWindowMigrated?: () => void
@@ -194,6 +199,7 @@ export abstract class BaseTldrawFileView<View extends FileView = FileView> {
 	async onUnloadFile(): Promise<void> {
 		const callbacks = [...this.#onUnloadCallbacks]
 		this.#onUnloadCallbacks = []
+		this.#editor = undefined
 		callbacks.forEach((e) => e())
 	}
 
@@ -208,6 +214,20 @@ export abstract class BaseTldrawFileView<View extends FileView = FileView> {
 	// 	}
 	// })
 	setEphemeralState(state: unknown): void {
+		// `[[drawing#^shapeId]]` links: zoom to the shape now if the editor is up, otherwise once it mounts.
+		const shapeId =
+			typeof state === 'object' && state && 'subpath' in state && typeof state.subpath === 'string'
+				? parseShapeSubpath(state.subpath)
+				: undefined
+		if (shapeId) {
+			if (this.#editor) {
+				this.#focusShape(this.#editor, shapeId)
+				return
+			}
+			this.#pendingShapeTarget = shapeId
+			return
+		}
+
 		// If a deep link is present when the document is opened, set the deeplink variable so the editor is opened at the deep link.
 		if (
 			typeof state === 'object' &&
@@ -223,6 +243,16 @@ export abstract class BaseTldrawFileView<View extends FileView = FileView> {
 				console.error('Unable to parse deeplink:', tldrawDeepLink, e)
 			}
 		}
+	}
+
+	#focusShape(editor: Editor, id: TLShapeId) {
+		if (!focusShape(editor, id)) {
+			new Notice("That shape isn't in this drawing anymore.")
+			return
+		}
+		// A hidden shape can't be seen on the canvas, so open the outline panel, where the
+		// selection sync expands its parents and scrolls its row into view.
+		if (isShapeOrAncestorHidden(editor, id)) updateOutlinePanelState(editor, { collapsed: false })
 	}
 
 	protected getTldrawOptions(): TldrawAppProps['options'] {
@@ -242,6 +272,13 @@ export abstract class BaseTldrawFileView<View extends FileView = FileView> {
 			},
 			initialDeepLink,
 			onEditorMount: (editor) => {
+				this.#editor = editor
+				const shapeTarget = this.#pendingShapeTarget
+				this.#pendingShapeTarget = undefined
+				if (shapeTarget) {
+					this.#focusShape(editor, shapeTarget)
+					return
+				}
 				if (!initialDeepLink && !hasSavedViewport) {
 					editor.zoomToFit()
 				}

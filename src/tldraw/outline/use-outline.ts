@@ -46,6 +46,18 @@ export interface OutlinePanelState {
 const DEFAULT_PANEL_STATE: OutlinePanelState = { collapsed: true, width: 260 }
 
 /** Panel state lives in the tldraw document meta, so it is saved per file. */
+export function updateOutlinePanelState(editor: Editor, patch: Partial<OutlinePanelState>) {
+	const meta = editor.getDocumentSettings().meta
+	const current = meta.outlinePanel as Partial<OutlinePanelState> | undefined
+	editor.run(
+		() =>
+			editor.updateDocumentSettings({
+				meta: { ...meta, outlinePanel: { ...DEFAULT_PANEL_STATE, ...current, ...patch } },
+			}),
+		{ history: 'ignore' }
+	)
+}
+
 export function useOutlinePanelState(editor: Editor) {
 	const stored = useValue(
 		'outline panel state',
@@ -55,17 +67,7 @@ export function useOutlinePanelState(editor: Editor) {
 	const state: OutlinePanelState = { ...DEFAULT_PANEL_STATE, ...stored }
 
 	const update = useCallback(
-		(patch: Partial<OutlinePanelState>) => {
-			const meta = editor.getDocumentSettings().meta
-			const current = meta.outlinePanel as Partial<OutlinePanelState> | undefined
-			editor.run(
-				() =>
-					editor.updateDocumentSettings({
-						meta: { ...meta, outlinePanel: { ...DEFAULT_PANEL_STATE, ...current, ...patch } },
-					}),
-				{ history: 'ignore' }
-			)
-		},
+		(patch: Partial<OutlinePanelState>) => updateOutlinePanelState(editor, patch),
 		[editor]
 	)
 

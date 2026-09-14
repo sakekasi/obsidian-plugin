@@ -116,6 +116,15 @@ reads the link on that line.
 | `#^block` | A block in a note |
 | `#page=3` | A page in a PDF |
 | `#page=3&rect=l,b,r,t` | A region of a PDF page, in PDF user-space units (left, bottom, right, top)[^pdf] |
+| `#^<shapeId>` | A shape in a tldraw drawing: the shape's id without its `shape:` prefix |
+
+### Shape links
+
+In the link popover, type `#` to pick a shape in the current drawing, or `path#` to pick one in another drawing. A shape link is stored like any other vault link. Links within the same drawing point at the drawing's own file, e.g. `[[Drawings/architecture#^abc123]]`, so they keep working after a rename.
+
+When a drawing is opened with a `#^<shapeId>` subpath, whether from a shape, a note, or a markdown link, the view switches to the shape's page, selects the shape, and zooms to fit it. If the shape no longer exists, a notice is shown. Obsidian's page preview doesn't understand shape subpaths, so hovering one previews the whole drawing.
+
+The picker labels shapes by their outline-panel name (`shape.meta.name`), then frame name, then text. Hidden shapes (`meta.hidden` on the shape or a parent) are listed dimmed. Following a link to a hidden shape still selects it, and opens the outline panel so its row is visible. A link opened in a new tab first exits fullscreen.
 
 ## PDF pages
 

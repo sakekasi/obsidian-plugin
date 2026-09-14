@@ -95,6 +95,11 @@
 	background: var(--ptl-popover-hover);
 }
 
+/* Shapes hidden via the outline panel: still linkable, but dimmed like in the outline. */
+.ptl-link-popover-suggestion.is-hidden .ptl-link-popover-name {
+	opacity: 0.45;
+}
+
 .ptl-link-popover-name {
 	font-weight: 500;
 	overflow: hidden;

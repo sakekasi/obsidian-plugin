@@ -12,6 +12,13 @@ export function isShapeFlaggedHidden(shape: TLShape) {
 	return shape.meta.hidden === true
 }
 
+/** Whether the shape is hidden on the canvas, by its own flag or a hidden frame/group around it. */
+export function isShapeOrAncestorHidden(editor: Editor, id: TLShapeId) {
+	const shape = editor.getShape(id)
+	if (!shape) return false
+	return [shape, ...editor.getShapeAncestors(shape)].some(isShapeFlaggedHidden)
+}
+
 /** Toggles hidden on all ids together: if any are visible, hide them all; otherwise show all. */
 export function toggleHidden(editor: Editor, ids: TLShapeId[]) {
 	const shapes = ids.map((id) => editor.getShape(id)).filter((s): s is TLShape => !!s)

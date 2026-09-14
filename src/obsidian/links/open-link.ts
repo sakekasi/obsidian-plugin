@@ -1,4 +1,5 @@
 import { App, HoverParent, Notice, TFile } from 'obsidian'
+import { exitFullscreen } from 'src/obsidian/fullscreen'
 import { ObsidianMarkdownFileTLAssetStoreProxy } from 'src/tldraw/asset-store'
 import { VIEW_TYPE_TLDRAW } from 'src/utils/constants'
 import { parseLink } from './link-ref'
@@ -35,9 +36,13 @@ export function resolveShapeLink(
 }
 
 /** Text shown when editing a link: `[[path#subpath]]` for vault links, the URL otherwise. */
-export function toEditableLinkText(resolved: ResolvedShapeLink | undefined) {
+export function toEditableLinkText(resolved: ResolvedShapeLink | undefined, sourcePath?: string) {
 	if (!resolved) return ''
 	if (resolved.kind === 'external') return resolved.url
+	// Links to shapes in the same drawing are shown as just `#^id`.
+	if (resolved.kind === 'vault' && resolved.file.path === sourcePath && resolved.subpath !== '') {
+		return `[[${resolved.subpath}]]`
+	}
 	const path = resolved.kind === 'vault' && resolved.file.extension === 'md'
 		? resolved.linktext.replace(/\.md(?=#|$)/, '')
 		: resolved.linktext
@@ -53,6 +58,8 @@ export async function openShapeLink(app: App, resolved: ResolvedShapeLink, newTa
 			new Notice(`Can't find "${resolved.linktext}" in this vault.`)
 			return
 		case 'vault':
+			// A new tab would open behind fullscreen (which hides every other tab), so leave it first.
+			if (newTab) exitFullscreen(activeDocument)
 			await app.workspace
 				.getLeaf(newTab ? 'tab' : false)
 				.openFile(resolved.file, { active: true, eState: { subpath: resolved.subpath } })
