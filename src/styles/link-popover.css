@@ -1,0 +1,153 @@
+/* Link editing popover. Uses tldraw's UI tokens when rendered inside the editor, Obsidian's otherwise. */
+
+.ptl-link-popover {
+	--ptl-popover-bg: var(--color-panel, var(--background-primary));
+	--ptl-popover-text: var(--color-text-1, var(--text-normal));
+	--ptl-popover-muted: var(--color-text-3, var(--text-muted));
+	--ptl-popover-hover: var(--color-muted-2, var(--background-modifier-hover));
+	--ptl-popover-accent: var(--color-selected, var(--interactive-accent));
+
+	width: 340px;
+	padding: 6px;
+	box-sizing: border-box;
+	font-family: var(--tl-font-sans, var(--font-interface));
+	font-size: 13px;
+	color: var(--ptl-popover-text);
+	background: var(--ptl-popover-bg);
+	border-radius: 12px;
+	box-shadow:
+		0 0 0 1px rgba(0, 0, 0, 0.06),
+		0 8px 24px rgba(0, 0, 0, 0.14);
+}
+
+.theme-dark .ptl-link-popover {
+	box-shadow:
+		0 0 0 1px rgba(255, 255, 255, 0.08),
+		0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.ptl-link-popover-field {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 0 8px;
+	border-radius: 8px;
+	background: var(--ptl-popover-hover);
+}
+
+.ptl-link-popover-glyph {
+	display: flex;
+	color: var(--ptl-popover-muted);
+}
+
+.ptl-link-popover .ptl-link-popover-input {
+	flex: 1;
+	height: 32px;
+	padding: 0;
+	border: none;
+	background: transparent;
+	box-shadow: none;
+	color: inherit;
+	font: inherit;
+}
+
+.ptl-link-popover .ptl-link-popover-input:focus {
+	border: none;
+	box-shadow: none;
+}
+
+.ptl-link-popover-hint {
+	padding: 8px 10px 2px;
+	font-size: 12px;
+}
+
+.ptl-link-popover-muted {
+	color: var(--ptl-popover-muted);
+}
+
+.ptl-link-popover-suggestions {
+	list-style: none;
+	margin: 4px 0 0;
+	padding: 0;
+}
+
+.ptl-link-popover-suggestion {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	padding: 6px 10px;
+	border-radius: 6px;
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+.ptl-link-popover-suggestion.is-highlighted {
+	background: var(--ptl-popover-hover);
+}
+
+.ptl-link-popover-name {
+	font-weight: 500;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.ptl-link-popover-ext {
+	padding: 0 5px;
+	border-radius: 4px;
+	font-size: 10px;
+	font-weight: 600;
+	text-transform: uppercase;
+	color: var(--ptl-popover-muted);
+	border: 1px solid currentColor;
+}
+
+.ptl-link-popover-folder {
+	margin-left: auto;
+	padding-left: 8px;
+	font-size: 12px;
+	color: var(--ptl-popover-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.ptl-link-popover-footer {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-top: 6px;
+}
+
+.ptl-link-popover-spacer {
+	flex: 1;
+}
+
+.ptl-link-popover .ptl-link-popover-button {
+	height: 28px;
+	padding: 0 10px;
+	border: none;
+	border-radius: 6px;
+	background: transparent;
+	box-shadow: none;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.ptl-link-popover .ptl-link-popover-button:hover {
+	background: var(--ptl-popover-hover);
+}
+
+.ptl-link-popover .ptl-link-popover-button.is-primary {
+	color: #fff;
+	background: var(--ptl-popover-accent);
+}
+
+.ptl-link-popover .ptl-link-popover-button.is-primary:disabled {
+	opacity: 0.45;
+	cursor: default;
+}
+
+.ptl-link-popover .ptl-link-popover-button.is-danger {
+	color: var(--color-danger, var(--text-error));
+}

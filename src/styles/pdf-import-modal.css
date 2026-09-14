@@ -1,0 +1,209 @@
+.ptl-pdf-import-modal {
+	--dialog-width: 640px;
+}
+
+.ptl-pdf-import-filename {
+	margin-top: 2px;
+	font-size: var(--font-ui-small);
+	font-weight: normal;
+	color: var(--text-muted);
+}
+
+/* Thumbnail strip */
+
+.ptl-pdf-import-strip {
+	display: flex;
+	gap: var(--size-4-3);
+	align-items: flex-end;
+	padding: var(--size-4-2) 6px var(--size-4-3);
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	scroll-snap-type: x proximity;
+	scroll-padding-inline: 6px;
+}
+
+.ptl-pdf-thumb {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--size-4-2);
+	flex: 0 0 auto;
+	scroll-snap-align: start;
+	cursor: pointer;
+	outline: none;
+}
+
+.ptl-pdf-thumb-paper {
+	position: relative;
+	height: 150px;
+	aspect-ratio: 612 / 792;
+	overflow: hidden;
+	background: #fff;
+	border-radius: 3px;
+	box-shadow:
+		0 0 0 1px var(--background-modifier-border),
+		0 1px 3px rgba(0, 0, 0, 0.08);
+	opacity: 0.55;
+	transition:
+		opacity 120ms ease,
+		box-shadow 120ms ease,
+		transform 120ms ease;
+}
+
+.ptl-pdf-thumb-paper canvas {
+	display: block;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	transition: opacity 160ms ease;
+}
+
+.ptl-pdf-thumb.is-rendered canvas {
+	opacity: 1;
+}
+
+.ptl-pdf-thumb:hover .ptl-pdf-thumb-paper {
+	transform: translateY(-2px);
+}
+
+.ptl-pdf-thumb.is-selected .ptl-pdf-thumb-paper {
+	opacity: 1;
+	box-shadow:
+		0 0 0 2px var(--interactive-accent),
+		0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.ptl-pdf-thumb:focus-visible .ptl-pdf-thumb-paper {
+	box-shadow:
+		0 0 0 2px var(--background-primary),
+		0 0 0 4px var(--interactive-accent);
+}
+
+.ptl-pdf-thumb-label {
+	display: flex;
+	align-items: center;
+	position: absolute;
+	left: 50%;
+	bottom: 8px;
+	transform: translateX(-50%);
+	gap: 5px;
+	padding: 2px 8px 2px 4px;
+	border-radius: 999px;
+	font-size: var(--font-ui-smaller);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	color: #5c5c5c;
+	background: rgba(240, 240, 240, 0.92);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+	backdrop-filter: blur(6px);
+}
+
+.ptl-pdf-thumb-check {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	border: 1px solid #c4c4c4;
+	background: #fff;
+	color: transparent;
+}
+
+.ptl-pdf-thumb-check svg {
+	width: 10px;
+	height: 10px;
+	stroke-width: 3;
+}
+
+.ptl-pdf-thumb.is-selected .ptl-pdf-thumb-label {
+	color: #222;
+}
+
+.ptl-pdf-thumb.is-selected .ptl-pdf-thumb-check {
+	border-color: var(--interactive-accent);
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+/* Settings card */
+
+.ptl-pdf-import-settings {
+	margin-top: var(--size-4-2);
+	padding: 0 var(--size-4-4);
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-l);
+}
+
+.ptl-pdf-import-settings .setting-item {
+	border-top-color: var(--background-modifier-border);
+}
+
+.ptl-pdf-import-pages {
+	align-items: flex-start;
+}
+
+.ptl-pdf-import-radios {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--size-4-2);
+	min-width: 330px;
+}
+
+.ptl-pdf-import-radio {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+	min-height: var(--input-height);
+	font-size: var(--font-ui-small);
+	cursor: pointer;
+}
+
+.ptl-pdf-import-page-input {
+	width: 56px;
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+.ptl-pdf-import-hint {
+	color: var(--text-faint);
+}
+
+.ptl-pdf-import-custom {
+	width: 180px;
+}
+
+.ptl-pdf-import-custom.ptl-invalid {
+	border-color: var(--text-error);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--text-error) 25%, transparent);
+}
+
+.ptl-pdf-import-error {
+	min-height: 1em;
+	margin: -4px 0 0 24px;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-error);
+}
+
+.ptl-pdf-import-error:empty {
+	display: none;
+}
+
+.ptl-pdf-import-scale .setting-item-description {
+	font-variant-numeric: tabular-nums;
+}
+
+.ptl-pdf-import-scale-input {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-1);
+	color: var(--text-muted);
+}
+
+.ptl-pdf-import-scale-input input {
+	width: 72px;
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}

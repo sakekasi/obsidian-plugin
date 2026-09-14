@@ -1,0 +1,38 @@
+.ptl-link-markers {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.tl-container .ptl-link-marker {
+	all: unset;
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	box-sizing: border-box;
+	border-radius: 5px;
+	color: var(--color-text-3);
+	background: var(--color-panel);
+	box-shadow: var(--shadow-1);
+	pointer-events: auto;
+	cursor: pointer;
+	transition:
+		color 100ms ease,
+		background-color 100ms ease;
+}
+
+.tl-container .ptl-link-marker:hover {
+	color: var(--color-selected);
+	background: var(--color-panel);
+}
+
+.tl-container .ptl-link-marker .tlui-icon {
+	width: 12px;
+	height: 12px;
+}

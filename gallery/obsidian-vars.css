@@ -1,0 +1,241 @@
+/*
+	Approximation of Obsidian's default theme: CSS variables plus the base styles for
+	modals, settings rows, inputs and buttons. Only what gallery stories need.
+*/
+
+body {
+	--font-interface: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+	--font-ui-smaller: 12px;
+	--font-ui-small: 13px;
+	--font-ui-medium: 15px;
+	--font-ui-large: 20px;
+	--radius-s: 4px;
+	--radius-m: 8px;
+	--radius-l: 12px;
+	--size-4-1: 4px;
+	--size-4-2: 8px;
+	--size-4-3: 12px;
+	--size-4-4: 16px;
+	--size-4-6: 24px;
+	--input-height: 30px;
+
+	font-family: var(--font-interface);
+	font-size: var(--font-ui-medium);
+	background: var(--background-primary);
+	color: var(--text-normal);
+}
+
+.theme-light {
+	--background-primary: #ffffff;
+	--background-primary-alt: #fafafa;
+	--background-secondary: #f6f6f6;
+	--background-secondary-alt: #e3e3e3;
+	--background-modifier-border: #e0e0e0;
+	--background-modifier-border-hover: #d4d4d4;
+	--background-modifier-hover: rgba(0, 0, 0, 0.067);
+	--background-modifier-form-field: #ffffff;
+	--background-modifier-error: #e93147;
+	--text-normal: #222222;
+	--text-muted: #5c5c5c;
+	--text-faint: #ababab;
+	--text-error: #e93147;
+	--text-on-accent: #ffffff;
+	--interactive-normal: #ffffff;
+	--interactive-hover: #f2f2f2;
+	--interactive-accent: #8a5cf5;
+	--interactive-accent-hover: #7a4ae0;
+	--color-accent: #8a5cf5;
+	--shadow-s: 0 1px 2px rgba(0, 0, 0, 0.05), 0 2px 6px rgba(0, 0, 0, 0.05);
+	--shadow-l: 0 14px 62px rgba(0, 0, 0, 0.25);
+	--modal-bg: rgba(0, 0, 0, 0.35);
+}
+
+.theme-dark {
+	--background-primary: #1e1e1e;
+	--background-primary-alt: #242424;
+	--background-secondary: #262626;
+	--background-secondary-alt: #363636;
+	--background-modifier-border: #363636;
+	--background-modifier-border-hover: #484848;
+	--background-modifier-hover: rgba(255, 255, 255, 0.067);
+	--background-modifier-form-field: #2a2a2a;
+	--background-modifier-error: #fb464c;
+	--text-normal: #dadada;
+	--text-muted: #b3b3b3;
+	--text-faint: #666666;
+	--text-error: #fb464c;
+	--text-on-accent: #ffffff;
+	--interactive-normal: #363636;
+	--interactive-hover: #3f3f3f;
+	--interactive-accent: #8a5cf5;
+	--interactive-accent-hover: #9d74f7;
+	--color-accent: #a882ff;
+	--shadow-s: 0 1px 2px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.2);
+	--shadow-l: 0 14px 62px rgba(0, 0, 0, 0.6);
+	--modal-bg: rgba(0, 0, 0, 0.6);
+}
+
+/* Modal */
+
+.modal-container {
+	position: fixed;
+	inset: 0;
+	z-index: 50;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.modal-bg {
+	position: absolute;
+	inset: 0;
+	background: var(--modal-bg);
+}
+
+.modal {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	width: var(--dialog-width, 560px);
+	max-width: calc(100vw - 32px);
+	max-height: 85vh;
+	overflow: auto;
+	padding: var(--size-4-4);
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-l);
+	box-shadow: var(--shadow-l);
+}
+
+.modal-close-button {
+	position: absolute;
+	top: var(--size-4-2);
+	right: var(--size-4-2);
+	display: flex;
+	padding: var(--size-4-1);
+	border-radius: var(--radius-s);
+	color: var(--text-faint);
+	cursor: pointer;
+}
+
+.modal-close-button:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.modal-close-button svg {
+	width: 18px;
+	height: 18px;
+}
+
+.modal-title {
+	font-size: var(--font-ui-large);
+	font-weight: 600;
+	margin-bottom: var(--size-4-3);
+	padding-right: var(--size-4-6);
+}
+
+.modal-button-container {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--size-4-2);
+	margin-top: var(--size-4-4);
+}
+
+/* Settings rows */
+
+.setting-item {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-4);
+	padding: 0.75em 0;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.setting-item:first-child {
+	border-top: none;
+}
+
+.setting-item-info {
+	flex: 1 1 auto;
+}
+
+.setting-item-name {
+	font-size: var(--font-ui-medium);
+	color: var(--text-normal);
+}
+
+.setting-item-description {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	padding-top: 2px;
+}
+
+.setting-item-control {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--size-4-2);
+	flex: 0 0 auto;
+}
+
+/* Form controls */
+
+input[type='text'],
+input[type='number'],
+select.dropdown {
+	height: var(--input-height);
+	padding: 0 var(--size-4-2);
+	font: inherit;
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+	background: var(--background-modifier-form-field);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	outline: none;
+}
+
+input[type='text']:focus,
+input[type='number']:focus {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--interactive-accent) 30%, transparent);
+}
+
+input[type='radio'] {
+	accent-color: var(--interactive-accent);
+	margin: 0;
+}
+
+button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: var(--input-height);
+	padding: 0 var(--size-4-3);
+	font: inherit;
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+	background: var(--interactive-normal);
+	border: none;
+	border-radius: var(--radius-s);
+	box-shadow: var(--shadow-s);
+	cursor: pointer;
+}
+
+button:hover {
+	background: var(--interactive-hover);
+}
+
+button.mod-cta {
+	color: var(--text-on-accent);
+	background: var(--interactive-accent);
+}
+
+button.mod-cta:hover {
+	background: var(--interactive-accent-hover);
+}
+
+button:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
