@@ -3,7 +3,7 @@ import { TldrawStoreIndexedDB } from 'src/tldraw/indexeddb-store'
 import { TLDataDocumentStore } from 'src/utils/document'
 import { loadSnapshot } from 'tldraw'
 import TldrawPlugin from '../main'
-import { VIEW_TYPE_TLDRAW } from '../utils/constants'
+import { TLDRAW_ICON_NAME, VIEW_TYPE_TLDRAW } from '../utils/constants'
 import { BaseTldrawFileView, DataUpdate } from './BaseTldrawFileView'
 import TldrawStoreExistsIndexedDBModal, {
 	TldrawStoreConflictResolveCanceled,
@@ -103,6 +103,10 @@ export class EditableTldrawView extends EditableFileView {
 
 	override getViewType() {
 		return VIEW_TYPE_TLDRAW
+	}
+
+	override getIcon() {
+		return TLDRAW_ICON_NAME
 	}
 
 	override getDisplayText() {

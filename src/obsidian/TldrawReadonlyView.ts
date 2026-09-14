@@ -82,6 +82,10 @@ export class ReadonlyTldrawView extends FileView {
 		return VIEW_TYPE_TLDRAW_READ_ONLY
 	}
 
+	override getIcon(): string {
+		return TLDRAW_ICON_NAME
+	}
+
 	override getDisplayText(): string {
 		return `[Preview] ${super.getDisplayText()}`
 	}
