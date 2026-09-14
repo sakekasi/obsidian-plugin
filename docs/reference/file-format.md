@@ -83,6 +83,7 @@ entry in the Links section:
 | --- | --- |
 | Shape link (`shape.meta.link`) | `obsidian.blockref.<uuid>` |
 | Image asset (`asset.props.src`) | `asset:obsidian.blockref.<uuid>` |
+| PDF page asset (`asset.props.src`) | `asset:obsidian.blockref.<uuid>`, where the line links to `file.pdf#page=N` |
 
 To resolve one, the plugin finds the block with that id in Obsidian's metadata cache and
 reads the link on that line.
@@ -103,6 +104,45 @@ reads the link on that line.
 | `#^block` | A block in a note |
 | `#page=3` | A page in a PDF |
 | `#page=3&rect=l,b,r,t` | A region of a PDF page, in PDF user-space units (left, bottom, right, top)[^pdf] |
+
+## PDF pages
+
+A PDF page on the canvas is an ordinary tldraw image shape and image asset. Only a link to
+the page is stored; the image itself is rendered from the PDF when the drawing loads.[^live]
+
+```markdown
+## Links
+
+[[Attachments/lecture-notes.pdf#page=3]]
+^8b71d0aa-2c4e-4f1a-9b3d-5e6f7a8b9c0d
+
+[[Attachments/lecture-notes.pdf#page=3&rect=61.2,396,367.2,633.6]]
+^1d2e3f4a-5b6c-4d7e-8f90-a1b2c3d4e5f6
+```
+
+| Record | Field | Value |
+| --- | --- | --- |
+| Image asset | `props.src` | `asset:obsidian.blockref.<uuid>` of the `#page=N` line |
+| Image asset | `props.w`, `props.h` | Page size in PDF points (after the page's rotation) |
+| Image asset | `props.mimeType` | `image/png` |
+| Image asset | `meta.pdf` | `{ "page": N }` |
+| Image shape | `props.w`, `props.h` | Page size × the import scale |
+| Image shape | `props.crop` | tldraw's crop, as fractions of the full page |
+| Image shape | `meta.link` | `obsidian.blockref.<uuid>`, the `#page=N` line, or a `#page=N&rect=…` line once cropped |
+
+- The asset always links to the whole page. Duplicated shapes share the asset.
+- Cropping a page gives that shape its own link line with `&rect=l,b,r,t`, so opening the link
+  goes to the cropped region. The rect is derived from `props.crop`; the crop is the source of
+  truth.
+- A crop writes a new line rather than editing the old one, because duplicates may share it.
+  Lines left unused are pruned on the next save.
+
+### Rendered pages are not in the file
+
+Rendered pages are cached in IndexedDB (`ptl-pdf-page-cache`), outside the vault. Entries are
+keyed on the PDF's path, modification time, page number, and render scale, so an edited PDF
+is rendered again. Entries not read for 30 days can be pruned. Deleting the cache only means
+pages are rendered again.
 
 ## Saving and cleanup
 
@@ -133,5 +173,7 @@ links are stored as raw text in `meta.link`.
 [^sections]: The heading structure follows the [Excalidraw plugin](https://github.com/zsviczian/obsidian-excalidraw-plugin), which groups `## Element Links` and `## Embedded Files` under a `# Excalidraw Data` heading.
 
 [^renames]: Keeping links as real markdown links so Obsidian's own rename handling updates them is also how the Excalidraw plugin tracks element links and embedded files. The block-ref indirection (`obsidian.blockref.<uuid>`) predates this and comes from the original tldraw-in-obsidian plugin's image storage.
+
+[^live]: Storing a link to the page and rendering it live with Obsidian's bundled pdf.js, with rendered pages cached in IndexedDB, follows the Excalidraw plugin's approach to embedded PDFs.
 
 [^pdf]: The `#page=N&rect=l,b,r,t` subpath, with the rect in PDF user-space units, matches the Excalidraw plugin's syntax for linking to and cropping PDF pages.
