@@ -16,7 +16,18 @@ The background should look like md paper
 
 ## outline tree view
 
+Figma provides a tree view of the scene to complement the canvas view.
+I'd also like to provide a similar affordance.
 ![](../images/figma-tree-view.png)
+Key features:
+- "collapse all"
+- locking an object, show/hide
+- arrow keys to navigate
+- shift+click and cmd+click to select multiple
+- space to rename
+- same right-click menu as if I had right clicked on the object in the cavas
+
+![](../images/figma-tree-view-collapsed.png)
 
 ## importing a PDF
 
